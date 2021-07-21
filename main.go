@@ -77,13 +77,13 @@ func respondWithJSON(w http.ResponseWriter, r *http.Request, code int, payload i
 }
 
 //add a new block to server
-func handlePostBlockchain(w http.ResponseWriter, r* http.Request){
+func handlePostBlockchain(w http.ResponseWriter, r *http.Request) {
 	//take in request
 	var m data.Message
 
 	//decode request data
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&m) ; err != nil {
+	if err := decoder.Decode(&m); err != nil {
 		respondWithJSON(w, r, http.StatusBadRequest, r.Body)
 		return
 	}
@@ -95,7 +95,7 @@ func handlePostBlockchain(w http.ResponseWriter, r* http.Request){
 		respondWithJSON(w, r, http.StatusBadRequest, r.Body)
 		return
 	}
-	if newBlock.IsBlockValid(Blockchain[len(Blockchain)-1]){
+	if newBlock.IsBlockValid(Blockchain[len(Blockchain)-1]) {
 		newBlockChain := append(Blockchain, newBlock)
 		replaceChain(newBlockChain)
 		spew.Dump(Blockchain)
@@ -106,7 +106,7 @@ func handlePostBlockchain(w http.ResponseWriter, r* http.Request){
 }
 
 //ask for existing blockchain from server
-func handleGetBlockchain(w http.ResponseWriter, r* http.Request)  {
+func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
 	bytes, err := json.MarshalIndent(Blockchain, "", " ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -121,10 +121,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bcServer = make(chan []Block)
+	go func() {
+		t := time.Now()
+		genesisBlock := data.Block{0, t.String(), 0, " ", " "}
+		spew.Dump(genesisBlock)
+		Blockchain = append(Blockchain, genesisBlock)
+	}()
 
-	t:=time.Now()
-	genesisBlock := data.Block{0, t.String(), 0, " ", " "}
-
-
+	log.Fatal(runServer())
 }
